@@ -25,7 +25,6 @@ cross2 = -1           #sum for lay2
 for line in fileinput.input():                                          #goes through the input file
     if "layers" in line:
         numLayers = line.split('(', 1)[1].split(')')[0]                 #gets the number of layers.
-
         for count in range(int(numLayers)):                             #creates layer objects.
             x = Layer.Layer()
             x.level = count
@@ -90,16 +89,15 @@ def clear():
 
 
 
-
-#Function that fills the matrix with 1's for edges and counts all the crossing between 2 given layers
+#Function that fills the matrix with 1's for edges and counts all the crossings between 2 given layers
 ############################################################################################
 def fillAndFindCrossings(matNum, minlayerCross):
     ########################################################################################
     #Fills the matrices with 1s for each edge
     i = 0
-    for mat in range(len(arrayMat)):                #go through all the matrices(2 in this case)
-        for size in range(layers[i].width):         #should be 0 - 4
-            node = layers[i].nodeArr[size]          #look at the nodes in the layer.
+    for mat in range(len(arrayMat)):                                        #go through all the matrices(2 in the test case)
+        for size in range(layers[i].width):                 
+            node = layers[i].nodeArr[size]                                  #look at the nodes in the layer.
             for edge in layers[i].nodes[node]:
                 if edge:
                     for values in edge:
@@ -112,7 +110,7 @@ def fillAndFindCrossings(matNum, minlayerCross):
     ##Gathers all indices that have edges and put it in a list
     countrow = 0;
     countcol = []
-    for row in arrayMat[matNum]:       #in the first
+    for row in arrayMat[matNum]:       
         indices = [i for i, x in enumerate(arrayMat[matNum][countrow]) if x == 1]
         for z in indices:
             layers[matNum].numedges += 1                                    #increase edge count in a layer
@@ -128,7 +126,7 @@ def fillAndFindCrossings(matNum, minlayerCross):
     r = 2;
     c = 3;
     rangee = int(len(countcol)/2)
-    for n in range(rangee):                                                 #loop 7 times
+    for n in range(rangee):                                                 
         while c < len(countcol) or r < len(countcol):
             if crossing > minlayerCross and minlayerCross >= 0:
                 return -1;
@@ -145,39 +143,35 @@ def fillAndFindCrossings(matNum, minlayerCross):
         cStart += 2
         r = 2 + rStart
         c = 2 + cStart 
-    return crossing;                    #prints 100 for some reason???
+    return crossing;                    
 
 ##########################################################################################################
-clear()                                 #create empty array of matrices
-
+clear()                                                     #create empty array of matrices
 #Fills in a node array for specified layer given a permutation
-def onePermutation(n, oneRow0):
+def onePermutation(n, row):
     count = 0                                                                       
-    for eachVal in oneRow0:                                
+    for eachVal in row:                                
         layers[n].nodeArr[count] = eachVal
         count += 1                                                   
     count = 0
     return;
 
-
-#Goes through all layers and all permutations.
-for oneRow0 in permMat[0]:  
-    onePermutation(0, oneRow0)
-    for oneRow1 in permMat[1]:                            #length is 120 rows of permutations          
-        onePermutation(1, oneRow1)
-        clear()
-        cross1 = fillAndFindCrossings(0, minC) 
-        if cross1 is not -1:                                #length is 120   
-            for oneRow2 in permMat[2]:               
-                onePermutation(2, oneRow2)
-                clear()
-                cross2 = fillAndFindCrossings(1, minC)
-                if cross2 is not -1:
-                    tot = cross1+ cross2       
-                    if minC == -1:
-                        minC = tot
-                    elif tot < minC and tot > 0:                        #STORES LAYER 2 NODES with the lowest # of crossings
-                        minC = tot
+for i in (itertools.product(*permMat)):                     #goes through whole giant list (each index has 3 lists)
+    crossC = 0
+    for index in range(int(numLayers)-1):                   #count between 2 layers
+        onePermutation(index, i[index])                     #Fills nodes for 1st layer    
+        onePermutation(index+1, i[index+1])                 #Fills nodes for 2nd layer
+        clear()                                             #Empties out the matrix between the layers
+        tempC = fillAndFindCrossings(index, minC)           #Fills the matrix and finds crossings
+        if tempC == -1:
+            crossC = -1
+            break
+        else:
+            crossC += tempC    
+    if (crossC < minC and crossC >= 0) or minC == -1:
+        minC = crossC 
+    if minC == 0:
+        break    
 
 print("Optimization:", minC)
-fileinput.close()   #closes the input file
+fileinput.close()                                           #closes the input file
